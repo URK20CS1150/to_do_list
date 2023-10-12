@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>To-Do List</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+	  @import url('https://fonts.googleapis.com/css?family=Lemonada');
+
+    body, html {
+       margin: 0;
+      padding: 0;
+      height: 100%
+}
+
+div{
+	display: block;
+	width: 400px;
+	margin: auto;
+}
+
+h1{
+	text-align: center;
+	color: black;
+	font-family: 'Lemonada', cursive !important;
+	text-transform: uppercase;
+}
+
+ul{
+	margin:0;
+	padding: 0;
+}
+
+#completed-tasks span{
+	text-decoration: line-through;
+	font-size: 1.2em !important;
+}
+	</style>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+</head>
+<body bgcolor="orange">
+	<div class="container">
+		<h1>To Do List</h1>
+		<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+  		<div class="mdl-tabs__tab-bar">
+      <a href="#add-item" class="mdl-tabs__tab is-active">Add Item</a>
+      <a href="#todo" class="mdl-tabs__tab">To-Do Tasks</a>
+      <a href="#completed" class="mdl-tabs__tab">Completed</a>
+  </div>
+
+  <div class="mdl-tabs__panel is-active" id="add-item">
+  	<div class="mdl-textfield mdl-js-textfield">
+    <input class="mdl-textfield__input" type="text" id="new-task">
+  	</div>
+
+	<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
+  <i class="material-icons">add</i>
+</button>
+  </div>
+  <div class="mdl-tabs__panel" id="todo">
+    <ul id="incomplete-tasks">
+    
+	</ul>
+  </div>
+  <div class="mdl-tabs__panel" id="completed">
+    <ul id="completed-tasks" class="mdl-list">
+    
+    </li>
+    </ul>
+  </div>
+</div>
+	</div>
+	<script>
+	  
+var newTask = document.getElementById("new-task");
+var addButton = document.getElementsByTagName("button")[0];
+var incompleteTasks = document.getElementById("incomplete-tasks");
+var completeTasks = document.getElementById("completed-tasks");
+var removeButton = document.getElementsByClassName("delete");
+var completedRemoveButton = completeTasks.getElementsByClassName("delete");
+
+showIncomplete();
+showComplete();
+
+
+function createNewTaskElement(str,i) {
+
+    var listItem = document.createElement("li");
+    var label = document.createElement("label");
+    var checkBox = document.createElement("input");
+    var span = document.createElement("span");
+    var deleteButton = document.createElement("button");
+    label.className = "mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect";
+    label.setAttribute("for",(i+1));
+    checkBox.type = "checkbox";
+    checkBox.id = (i+1);
+    checkBox.setAttribute("onclick","completed(this)");
+    checkBox.className = "mdl-checkbox__input";
+    span.className = "mdl-checkbox__label";
+    span.id = "text-" + (Number(i)+1);
+    span.innerText = str;
+    deleteButton.className = "mdl-button mdl-js-button mdl-js-ripple-effect delete";
+    deleteButton.innerText = "Delete";
+    deleteButton.id = i+1;
+    label.appendChild(checkBox);
+    label.appendChild(span);
+    listItem.appendChild(label);
+    listItem.appendChild(deleteButton);
+
+    return listItem;
+
+};
+
+function completedTaskElement(str, i){
+    var listItem = document.createElement("li");
+    var span = document.createElement("span");
+    var icon = document.createElement("i");
+    var deleteButton = document.createElement("button");
+    listItem.className = "mdl-list";
+    span.className = "mdl-list__item-primary-content";
+    icon.className = "material-icons mdl-list__item-icon";
+    icon.innerText = "done";
+    str = document.createTextNode(str);
+    span.appendChild(icon);
+    span.appendChild(str);
+    deleteButton.className = "mdl-button mdl-js-button mdl-js-ripple-effect delete";
+    deleteButton.innerText = "Delete";
+    deleteButton.id = i+1;
+    listItem.appendChild(span);
+    listItem.appendChild(deleteButton);
+
+    return listItem;
+
+};
+
+function completed(element){
+    var id = element.getAttribute('id');
+    var complete = getCompletedData();
+    str = document.getElementById("text-" + Number(id)).innerText;
+    complete.push(str);
+    localStorage.setItem('complete',JSON.stringify(complete));
+    completeTasks.appendChild(completedTaskElement(str,complete.length-1));
+    completedRemoveButton[complete.length-1].addEventListener('click', deleteComplete);
+    var data = getData();
+    data.splice(id-1,1);
+    localStorage.setItem('todo', JSON.stringify(data));
+    incompleteTasks.innerHTML="";
+    showIncomplete();
+    componentHandler.upgradeDom();
+};
+
+function getData(){
+    var data = new Array;
+    var data_str = localStorage.getItem('todo');
+    if (data_str != null){
+        data = JSON.parse(data_str);
+    }
+    return data;
+};
+
+function getCompletedData(){
+    var data = new Array;
+    var data_str = localStorage.getItem('complete');
+    if (data_str != null){
+        data = JSON.parse(data_str);
+    }
+    return data;    
+};
+
+
+function addTask() {
+    var data = getData();
+    var task = newTask.value;
+    if(task != "") {
+        data.push(newTask.value);
+        localStorage.setItem('todo', JSON.stringify(data));
+        add(newTask.value,data.length-1);
+        newTask.value="";
+        componentHandler.upgradeDom();
+    }
+    return false;
+};
+
+function add(str,i){
+    incompleteTasks.appendChild(createNewTaskElement(str,i));
+    removeButton[i].addEventListener('click', deleteIncomplete);
+};
+function showIncomplete(){
+    var data = getData();
+    for(var i=0; i<data.length;i++){
+        incompleteTasks.appendChild(createNewTaskElement(data[i],i));
+        removeButton[i].addEventListener('click', deleteIncomplete);
+    }
+};
+
+function showComplete(){
+    var complete = getCompletedData();
+    for(var i=0; i<complete.length;i++){
+        completeTasks.appendChild(completedTaskElement(complete[i],i));
+        completedRemoveButton[i].addEventListener('click', deleteComplete);
+    }
+
+};
+
+function deleteIncomplete(){
+    var id = this.getAttribute('id');
+    var data = getData();
+    data.splice(id-1,1);
+    localStorage.setItem('todo', JSON.stringify(data));
+    incompleteTasks.innerHTML="";
+    showIncomplete();
+    componentHandler.upgradeDom();
+    return false;
+};
+
+function deleteComplete() {
+    var id = this.getAttribute('id');
+    var data = getCompletedData();
+    data.splice(id-1,1);
+    localStorage.setItem('complete', JSON.stringify(data));
+    completeTasks.innerHTML="";
+    showComplete();
+    return false;
+};
+
+addButton.addEventListener("click",addTask);
+	</script>
+</body>	
+</html>
